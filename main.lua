@@ -1,7 +1,10 @@
 -----------------------------------------------------------------------------------------
 --
 -- main.lua
+-- Spencer Bowen, TJ Couch, Timothy Morrison, Jonah Minihan, Austin Vickers
 --
 -----------------------------------------------------------------------------------------
 
--- Your code here
+local composer = require("composer")
+
+composer.gotoScene("title")
