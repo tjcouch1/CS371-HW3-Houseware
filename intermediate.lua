@@ -18,23 +18,35 @@ local stage = 1
 -- Transition effect, slides the current scene left
 local transition = {
 	effect = "slideLeft",
-	time = 1500
+	time = 750,
+	params = {
+		stageNum = stage
+	}
 }
+local gotoGameTimer--the timer for automatically going to the game
 
 -- Listener function for switching to game scene, happens after a couple seconds
 local function switchSceneToGame( event )
+	timer.cancel(gotoGameTimer)
 	composer.gotoScene("game_view", transition)
 	return true
 end
 
 -- Switched to game view after 2.5 seconds, used multiple times
 local function gotoGame ()
-	return timer.performWithDelay(2500, switchSceneToGame)
+	gotoGameTimer = timer.performWithDelay(2500, switchSceneToGame)
 end
 
 function scene:create( event )
 	local sceneGroup = self.view
 	local phase = event.phase
+	
+	--rectangle to click to go to game quickly
+	local backRect = display.newRect(display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight)
+	backRect.isHitTestable = true
+	backRect:setFillColor(1, 1, 1, 0)
+	sceneGroup:insert(backRect)
+	backRect:addEventListener("tap", switchSceneToGame)
 	
 	-- Shows the number of lives remaining at the top of the screen
 	livesDisplay = display.newText(sceneGroup, lives.." Lives Remain", display.contentCenterX, 20, native.systemFont, 24)
@@ -70,14 +82,14 @@ function scene:show( event )
 		elseif(stage >= 15) then
 		
 		end
-		
-		Runtime:addEventListener("tap", switchSceneToGame)
 	end
 end
 
 function scene:hide( event )
 	local sceneGroup = self.view
 	local phase = event.phase
+	if phase == "did" then
+	end
 end
 
 function scene:destroy( event )

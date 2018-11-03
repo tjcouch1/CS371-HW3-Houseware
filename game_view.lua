@@ -14,30 +14,32 @@ local scene = composer.newScene()
 -- Transition back to intermediate view
 local transition = {
 	effect = "slideRight",
-	time = 1500
+	time = 750
 }
 local spriteSheet--the sprite sheet for everything
 local itemToGet--the sprite that shows which item to get at the start of each round
+local stageText--the text at the top that shows which stage you're on
+local stage
 
--- Temporary, just for getting scene set up. Transitions to intermediate
-local function e (event)
-	composer.gotoScene("intermediate", transition)
-	return true
-end
-
--- Temporary. Used multiple times.
+-- gotoInter returns to theintermediate screen
 local function gotoInter ()
-	timer.performWithDelay (3000, e)
+	composer.gotoScene("intermediate", transition)
 end
 
 function scene:create( event )
 	local sceneGroup = self.view
 	local phase = event.phase
 	
+	stage = event.params.stageNum
+	
+	--set default fill color to black
+	display.setDefault("fillColor", 0, 0, 0)
+	
 	--set background to red
 	local backRect = display.newRect(display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight)
 	backRect:setFillColor(1, 0, 0)
 	sceneGroup:insert(backRect)
+	backRect:addEventListener("tap", gotoInter)
 	
 	--set up sprites
 	spriteSheet = graphics.newImageSheet("marioware.png", {
@@ -160,30 +162,41 @@ function scene:create( event )
 	topDisplay:scale(1.25, 1.25)
 	
 	-- top text displaying stage
-	local sceneText = display.newText(sceneGroup, "Stage 0", display.contentCenterX, 25, native.systemFont, 30)
+	stageText = display.newText(sceneGroup, "Stage "..stage, display.contentCenterX, 25, native.systemFont, 30)
 	
 	--create item to get display
 	
 	--create "Find!" text
+	display.newText(sceneGroup, "Find!", display.contentCenterX, display.contentHeight * 9 / 30, native.systemFont, 30)
 	
-	--create bottom display
+	--create bottom display of the room
+	local bottomDisplay = display.newSprite(sceneGroup, spriteSheet, {name = "default", frames = {2}})
+	bottomDisplay.x = display.contentWidth / 2
+	bottomDisplay.y = display.contentHeight * 3 / 4
+	bottomDisplay:scale(1.25, 1.25)
 	
 	--create progress bar
 	--TODO: create progress bar
 	
-	gotoInter()
+	
+	--set default fill color back to white
+	display.setDefault("fillColor", 1, 1, 1)
 end
 
 function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
 	if phase == "will" then
+		--update to the right stage
+		stageText.text = "Stage "..stage
 	end
 end
 
 function scene:hide( event )
 	local sceneGroup = self.view
 	local phase = event.phase
+	if phase == "did" then
+	end
 end
 
 function scene:destroy( event )
