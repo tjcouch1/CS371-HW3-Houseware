@@ -1,3 +1,11 @@
+-----------------------------------------------------------------------------------------
+--
+-- intermediate.lua - shows the player's lives and sends them to the next game
+--
+-- HW3-Houseware
+-- Spencer Bowen, TJ Couch, Timothy Morrison, Jonah Minihan, Austin Vickers
+--
+-----------------------------------------------------------------------------------------
 
 local composer = require("composer")
 
@@ -14,14 +22,14 @@ local transition = {
 }
 
 -- Listener function for switching to game scene, happens after a couple seconds
-local function listener( event )
+local function switchSceneToGame( event )
 	composer.gotoScene("game_view", transition)
 	return true
 end
 
--- Switched to game view after 1.5 seconds, used multiple times
+-- Switched to game view after 2.5 seconds, used multiple times
 local function gotoGame ()
-	return timer.performWithDelay(1500, listener)
+	return timer.performWithDelay(2500, switchSceneToGame)
 end
 
 function scene:create( event )
@@ -44,7 +52,7 @@ function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
 	
-	if(phase == "begin") then
+	if(phase == "will") then
 		-- If the previous scene was the game and the player succeeded, increase stage. Or if they failed, decrease lives.
 		if( not event.params == nil and event.params.success) then
 			stage = stage + 1
@@ -54,14 +62,16 @@ function scene:show( event )
 		
 		-- If the player still has lives, continue on to next stage. If not, game over. If stage 15 completed, show congrats/play again type deal
 		if(lives > 0 and stage < 15) then
-			livesDisplay:setText(lives.." Lives Remain")
-			stageDisplay:setText("Stage "..stage)
+			livesDisplay.text = lives.." Lives Remain"
+			stageDisplay.text = "Stage "..stage
 			gotoGame()
 		elseif(lives <= 0) then
 			
 		elseif(stage >= 15) then
 		
 		end
+		
+		Runtime:addEventListener("tap", switchSceneToGame)
 	end
 end
 

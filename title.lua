@@ -1,3 +1,11 @@
+-----------------------------------------------------------------------------------------
+--
+-- title.lua - introduces the game
+--
+-- HW3-Houseware
+-- Spencer Bowen, TJ Couch, Timothy Morrison, Jonah Minihan, Austin Vickers
+--
+-----------------------------------------------------------------------------------------
 
 local composer = require("composer")
 local widget = require("widget")
@@ -20,9 +28,12 @@ function scene:create( event )
 	
 	-- "Start" button
 	local start = widget.newButton({
-		x = display.contentCenterX, 
-		y = display.contentCenterY*3/2, 
-		onRelease = release
+		x = display.contentCenterX,
+		y = display.contentCenterY*3/2,
+		onRelease = release,
+		shape = "roundedRect",
+		width = display.contentWidth / 3,
+		height = display.contentHeight / 10
 	})
 	start:setLabel("Start")
 	sceneGroup:insert(start)
