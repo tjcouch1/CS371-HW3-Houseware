@@ -58,9 +58,6 @@ function scene:create( event )
 	
 	-- Shows the current stage of the player
 	stageDisplay = display.newText(sceneGroup, "Stage "..stage, display.contentCenterX, display.contentCenterY, native.systemFont, 28)
-	
-	-- Switch to game view after a few seconds
-	gotoGame()
 end
 
 function scene:show( event )
@@ -85,7 +82,7 @@ function scene:show( event )
 			--continue to next round
 			livesDisplay.text = lives.." Lives Remain"
 			stageDisplay.text = "Stage "..stage
-			gotoGame()
+			gotoGame()-- Switch to game view after a few seconds
 		elseif(lives <= 0) then
 			--lose game
 			livesDisplay.text = ""

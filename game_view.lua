@@ -16,9 +16,15 @@ local itemToGet--the sprite that shows which item to get at the start of each ro
 local stageText--the text at the top that shows which stage you're on
 local stage--which stage we're on
 local win = false--whether the player won
+local roundTimer--timer to count down to the expire time for round
+local roundLength = 8--round time in seconds
+local roundTimeText--text that shows time left in round in seconds
 
 -- gotoInter returns to the intermediate screen
 local function gotoInter ()
+	if roundTimer ~= nil then
+		timer.cancel(roundTimer)
+	end
 	composer.gotoScene("intermediate", {
 		effect = "slideRight",
 		time = 750,
@@ -26,6 +32,16 @@ local function gotoInter ()
 			success = win
 		}
 	})
+end
+
+--roundTimerCountDown(event) counts seconds down for the round time and ends the game at round length
+--this is necessary to update the progress bar and time display
+local function roundTimerCountDown(event)
+	roundTimeText.text = roundLength - event.count
+	if event.count >= roundLength then
+		--end round on a loss
+		gotoInter()
+	end
 end
 
 function scene:create( event )
@@ -179,10 +195,13 @@ function scene:create( event )
 	--TODO: remove this when the game is winnable
 	bottomDisplay:addEventListener("tap", function() win = true gotoInter() return true end)
 	
-	
 	--create progress bar
 	--TODO: create progress bar
 	
+	--text for round time
+	roundTimeText = display.newText(sceneGroup, roundLength, 0, display.contentHeight, native.systemFont, 20)
+	roundTimeText.anchorX = 0
+	roundTimeText.anchorY = 1
 	
 	--set default fill color back to white
 	display.setDefault("fillColor", 1, 1, 1)
@@ -192,10 +211,13 @@ function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
 	if phase == "will" then
+		--start the game
 		--update to the right stage
 		stage = event.params.stageNum
 		stageText.text = "Stage "..stage
 		win = false--reset the win state
+		roundTimeText.text = roundLength--reset the timer display
+		roundTimer = timer.performWithDelay(1000, roundTimerCountDown, roundLength)--start game timer to loss
 	end
 end
 
