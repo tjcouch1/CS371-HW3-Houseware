@@ -8,6 +8,7 @@
 -----------------------------------------------------------------------------------------
 
 local composer = require("composer")
+local widget = require("widget")
 
 local scene = composer.newScene()
 
@@ -27,6 +28,7 @@ local objFrameTable = {--table of frames to use for each object index 1-21
 	8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,--11 normal objects
 	8,    10, 11, 12, 13, 14, 15, 16, 17, 18--10 flipped objects
 }
+local progressBar;--the progressView widget
 
 -- gotoInter returns to the intermediate screen
 local function gotoInter ()
@@ -87,6 +89,7 @@ end
 --this is necessary to update the progress bar and time display
 local function roundTimerCountDown(event)
 	roundTimeText.text = roundLength - event.count
+	progressBar:setProgress(((roundLength-event.count) / 8) * 0.99)
 	if event.count >= roundLength then
 		--end round on a loss
 		gotoInter()
@@ -248,6 +251,17 @@ function scene:create( event )
 	roundTimeText.anchorX = 0
 	roundTimeText.anchorY = 1
 
+	progressBar = widget.newProgressView(
+		{
+			x = display.contentCenterX,
+			y = display.contentCenterY + 250,
+			width = 300,
+			isAnimated = true
+		}
+	)
+	progressBar:setProgress(0.99)
+	sceneGroup:insert(progressBar)
+
 	--set default fill color back to white
 	display.setDefault("fillColor", 1, 1, 1)
 end
@@ -363,6 +377,7 @@ function scene:show( event )
 		roundTimer = timer.performWithDelay(1000, roundTimerCountDown, roundLength)--start game timer to loss
 		--create objects
 		spawnObjects(objGroup, 12);
+		progressBar:setProgress(0.99)
 	end
 	if(phase == "did") then
 	end
