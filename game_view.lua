@@ -11,19 +11,21 @@ local composer = require("composer")
 
 local scene = composer.newScene()
 
--- Transition back to intermediate view
-local transition = {
-	effect = "slideRight",
-	time = 750
-}
 local spriteSheet--the sprite sheet for everything
 local itemToGet--the sprite that shows which item to get at the start of each round
 local stageText--the text at the top that shows which stage you're on
-local stage
+local stage--which stage we're on
+local win = false--whether the player won
 
--- gotoInter returns to theintermediate screen
+-- gotoInter returns to the intermediate screen
 local function gotoInter ()
-	composer.gotoScene("intermediate", transition)
+	composer.gotoScene("intermediate", {
+		effect = "slideRight",
+		time = 750,
+		params = {
+			success = win
+		}
+	})
 end
 
 function scene:create( event )
@@ -174,6 +176,9 @@ function scene:create( event )
 	bottomDisplay.x = display.contentWidth / 2
 	bottomDisplay.y = display.contentHeight * 3 / 4
 	bottomDisplay:scale(1.25, 1.25)
+	--TODO: remove this when the game is winnable
+	bottomDisplay:addEventListener("tap", function() win = true gotoInter() return true end)
+	
 	
 	--create progress bar
 	--TODO: create progress bar
@@ -188,7 +193,9 @@ function scene:show( event )
 	local phase = event.phase
 	if phase == "will" then
 		--update to the right stage
+		stage = event.params.stageNum
 		stageText.text = "Stage "..stage
+		win = false--reset the win state
 	end
 end
 

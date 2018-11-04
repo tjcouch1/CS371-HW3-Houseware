@@ -15,25 +15,28 @@ local scene = composer.newScene()
 local lives = 4
 local stage = 1
 
--- Transition effect, slides the current scene left
-local transition = {
-	effect = "slideLeft",
-	time = 750,
-	params = {
-		stageNum = stage
-	}
-}
 local gotoGameTimer--the timer for automatically going to the game
 
 -- Listener function for switching to game scene, happens after a couple seconds
 local function switchSceneToGame( event )
-	timer.cancel(gotoGameTimer)
-	composer.gotoScene("game_view", transition)
+	if gotoGameTimer ~= nil then
+		timer.cancel(gotoGameTimer)
+	end
+	composer.gotoScene("game_view", {
+		effect = "slideLeft",
+		time = 750,
+		params = {
+			stageNum = stage
+		}
+	})
 	return true
 end
 
 -- Switched to game view after 2.5 seconds, used multiple times
 local function gotoGame ()
+	if gotoGameTimer ~= nil then
+		timer.cancel(gotoGameTimer)
+	end
 	gotoGameTimer = timer.performWithDelay(2500, switchSceneToGame)
 end
 
@@ -66,21 +69,30 @@ function scene:show( event )
 	
 	if(phase == "will") then
 		-- If the previous scene was the game and the player succeeded, increase stage. Or if they failed, decrease lives.
-		if( not event.params == nil and event.params.success) then
-			stage = stage + 1
-		elseif(not event.params == nil) then
-			lives = lives - 1
+		if event.params ~= nil then
+			if event.params.success then
+				--win round
+				stage = stage + 1
+			else
+				--lose round
+				lives = lives - 1
+			end
 		end
 		
-		-- If the player still has lives, continue on to next stage. If not, game over. If stage 15 completed, show congrats/play again type deal
-		if(lives > 0 and stage < 15) then
+		-- If the player still has lives, continue on to next stage. If not, game over. If stage 10 completed, show congrats/play again type deal
+		if(lives > 0 and stage <= 10) then
+			--continue to next round
 			livesDisplay.text = lives.." Lives Remain"
 			stageDisplay.text = "Stage "..stage
 			gotoGame()
 		elseif(lives <= 0) then
-			
-		elseif(stage >= 15) then
-		
+			--lose game
+			livesDisplay.text = ""
+			stageDisplay.text = "You lose!"
+		elseif(stage > 10) then
+			--win game
+			livesDisplay.text = ""
+			stageDisplay.text = "You win!"
 		end
 	end
 end
