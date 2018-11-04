@@ -70,9 +70,10 @@ function scene:show( event )
 	if(phase == "will") then
 		-- If the previous scene was the game and the player succeeded, increase stage. Or if they failed, decrease lives.
 		if event.params ~= nil then
+			--always increment stage
+			stage = stage + 1
 			if event.params.success then
 				--win round
-				stage = stage + 1
 			else
 				--lose round
 				lives = lives - 1
