@@ -250,6 +250,7 @@ function spawnObject(objNumber, sceneGroup, maxObjects)
 			if(randFrame ~= objNumber) then
 				local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={randFrame}} );
 				redHerring.x = board[i][j].x; redHerring.y = board[i][j].y;
+				redHerring.xScale = math.random(-1, 1);
 				redHerring:addEventListener("tap", wrongObjectTapped );
 				board[i][j].isFilled = true;
 				objCount = objCount + 1;
