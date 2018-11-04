@@ -86,7 +86,7 @@ function scene:show( event )
 		elseif(lives <= 0) then
 			--lose game
 			livesDisplay.text = ""
-			stageDisplay.text = "You lose!"
+			stageDisplay.text = "Game Over!"
 		elseif(stage > 10) then
 			--win game
 			livesDisplay.text = ""
