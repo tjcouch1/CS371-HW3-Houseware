@@ -43,7 +43,15 @@ function initBoard()
         	--local rect = display.newRect(board[i][j].x, board[i][j].y, 5, 5);
     	end
 	end
+end
 
+--On Tap events
+function correctObjectTapped(event)
+	print("Correct object tapped!")
+end
+
+function wrongObjectTapped(event)
+	print("Wrong Object Tapped!")
 end
 
 
@@ -198,7 +206,7 @@ function scene:create( event )
 	local rand = math.random(8, 18);
 	itemToGet = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {rand}});
 	itemToGet.x = topDisplay.x; itemToGet.y = topDisplay.y;
-	sceneGroup:insert(spawnObject(rand, sceneGroup));
+	sceneGroup:insert(spawnObject(rand, sceneGroup, 12));
 	
 	--create "Find!" text
 	local findText = display.newText(sceneGroup, "Find!", topDisplay.x, topDisplay.y+75, native.systemFont, 25);
@@ -213,7 +221,7 @@ function scene:create( event )
 	gotoInter()
 end
 
-function spawnObject(objNumber, sceneGroup)
+function spawnObject(objNumber, sceneGroup, maxObjects)
 
 	--First spawn in the correct object
 	local randRow = math.random(1,3);
@@ -223,15 +231,28 @@ function spawnObject(objNumber, sceneGroup)
 	correctObj.x = board[randRow][randCol].x; correctObj.y = board[randRow][randCol].y;
 	board[randRow][randCol].isFilled = true;
 
+	correctObj:addEventListener( "tap", correctObjectTapped )
+
+	local objCount = 1;
+
+	--The following algorithm employs busy waiting for whenever i and j are a location that is already filled,
+	--making this less efficient. However, for a max of 12 elements this doesn't pose a serious issue. Additionally,
+	--this alg. ensures there will always be exactly maxObjects spawned. 	--AV
+
 	--Next spawn in a wrong object for each other cell
-	for i = 1, 3 do
-		for j = 1, 4 do
-			--Frames 8 through 18 are valid
-			local randFrame = math.random(8,18);
-			local randIsNil = math.random(0, 1);
-			if(board[i][j].isFilled == false) then
+	while objCount < maxObjects do 
+		local i = math.random(1,3);	--random row
+		local j = math.random(1,4);	--random column
+		--Frames 8 through 18 are valid
+		local randFrame = math.random(8,18);
+
+		if(board[i][j].isFilled == false) then
+			if(randFrame ~= objNumber) then
 				local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={randFrame}} );
 				redHerring.x = board[i][j].x; redHerring.y = board[i][j].y;
+				redHerring:addEventListener("tap", wrongObjectTapped );
+				board[i][j].isFilled = true;
+				objCount = objCount + 1;
 			end
 		end
 	end
@@ -240,6 +261,35 @@ function spawnObject(objNumber, sceneGroup)
 
 end
 
+--[[]
+	This algorithm is problematic because it only ensures that NO MORE than max objects are spawned.
+	Any amount less than than is left up to the random randIsNil value. However, this solution employs
+	no busy waiting, and is more efficient. But, given the constraints of the project, the above alg
+	provides more control and less randomness, and so this one is deprecated
+
+	--AV
+
+	for i = 1, 3 do
+		for j = 1, 4 do
+
+			if(objCount >= maxObjects) then
+				break;
+			end
+
+			--Frames 8 through 18 are valid
+			local randFrame = math.random(8,18);
+			local randIsNil = math.random(0, 1);
+			if(board[i][j].isFilled == false and randIsNil ~= 1) then
+				if(randFrame ~= objNumber) then
+					local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={randFrame}} );
+					redHerring.x = board[i][j].x; redHerring.y = board[i][j].y;
+					redHerring:addEventListener("tap", wrongObjectTapped );
+					objCount = objCount + 1;
+				end
+			end
+		end
+	end
+--]]
 
 
 function scene:show( event )
