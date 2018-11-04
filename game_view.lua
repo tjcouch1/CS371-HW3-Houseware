@@ -19,6 +19,35 @@ local transition = {
 local spriteSheet--the sprite sheet for everything
 local itemToGet--the sprite that shows which item to get at the start of each round
 
+--a 3x4 grid to place items in so they won't overlap
+local board = {};
+
+function initBoard()
+	local cellWidth = display.contentWidth/4;
+	local cellHeight = (display.contentHeight/2)/3;
+
+	local initX = 0;
+	local initY = (display.contentHeight/2) - cellHeight;
+
+	for i=1, 3 do
+  		board[i] = {};     -- create a new row
+  		initX = 0;
+  		initY = initY + cellHeight;
+    	for j=1, 4 do 	   -- create a new column
+        	board[i][j] = {
+        		x = initX + cellWidth/2;
+        		y = initY + cellHeight/2;
+        		isFilled = false;
+        	}
+        	initX = initX + cellWidth;
+        	--local rect = display.newRect(board[i][j].x, board[i][j].y, 5, 5);
+    	end
+	end
+
+end
+
+
+
 -- Temporary, just for getting scene set up. Transitions to intermediate
 local function e (event)
 	composer.gotoScene("intermediate", transition)
@@ -39,6 +68,8 @@ function scene:create( event )
 	backRect:setFillColor(1, 0, 0)
 	sceneGroup:insert(backRect)
 	
+	initBoard();
+
 	--set up sprites
 	spriteSheet = graphics.newImageSheet("marioware.png", {
 		frames = {
@@ -162,11 +193,19 @@ function scene:create( event )
 	-- top text displaying stage
 	local sceneText = display.newText(sceneGroup, "Stage 0", display.contentCenterX, 25, native.systemFont, 30)
 	
-	--create item to get display
+	--create item to get
+	--Frames 8 through 18 are valid objects
+	local rand = math.random(8, 18);
+	itemToGet = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {rand}});
+	itemToGet.x = topDisplay.x; itemToGet.y = topDisplay.y;
+	sceneGroup:insert(spawnObject(rand, sceneGroup));
 	
 	--create "Find!" text
+	local findText = display.newText(sceneGroup, "Find!", topDisplay.x, topDisplay.y+75, native.systemFont, 25);
+	findText:setFillColor(41/255, 228/255, 242/255)
 	
 	--create bottom display
+
 	
 	--create progress bar
 	--TODO: create progress bar
@@ -174,10 +213,42 @@ function scene:create( event )
 	gotoInter()
 end
 
+function spawnObject(objNumber, sceneGroup)
+
+	--First spawn in the correct object
+	local randRow = math.random(1,3);
+	local randCol = math.random(1,4);
+
+	local correctObj = display.newSprite(sceneGroup, spriteSheet, {name="default", frames={objNumber}});
+	correctObj.x = board[randRow][randCol].x; correctObj.y = board[randRow][randCol].y;
+	board[randRow][randCol].isFilled = true;
+
+	--Next spawn in a wrong object for each other cell
+	for i = 1, 3 do
+		for j = 1, 4 do
+			--Frames 8 through 18 are valid
+			local randFrame = math.random(8,18);
+			local randIsNil = math.random(0, 1);
+			if(board[i][j].isFilled == false) then
+				local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={randFrame}} );
+				redHerring.x = board[i][j].x; redHerring.y = board[i][j].y;
+			end
+		end
+	end
+
+	return correctObj;
+
+end
+
+
+
 function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
+
 	if phase == "will" then
+		
+
 	end
 end
 
