@@ -20,6 +20,7 @@ local roundTimer--timer to count down to the expire time for round
 local roundLength = 8--round time in seconds
 local roundTimeText--text that shows time left in round in seconds
 
+<<<<<<< HEAD
 -- gotoInter returns to the intermediate screen
 local function gotoInter ()
 	if roundTimer ~= nil then
@@ -32,6 +33,49 @@ local function gotoInter ()
 			success = win
 		}
 	})
+=======
+--a 3x4 grid to place items in so they won't overlap
+local board = {};
+
+function initBoard()
+	local cellWidth = display.contentWidth/4;
+	local cellHeight = (display.contentHeight/2)/3;
+
+	local initX = 0;
+	local initY = (display.contentHeight/2) - cellHeight;
+
+	for i=1, 3 do
+  		board[i] = {};     -- create a new row
+  		initX = 0;
+  		initY = initY + cellHeight;
+    	for j=1, 4 do 	   -- create a new column
+        	board[i][j] = {
+        		x = initX + cellWidth/2;
+        		y = initY + cellHeight/2;
+        		isFilled = false;
+        	}
+        	initX = initX + cellWidth;
+        	--local rect = display.newRect(board[i][j].x, board[i][j].y, 5, 5);
+    	end
+	end
+end
+
+--On Tap events
+function correctObjectTapped(event)
+	print("Correct object tapped!")
+end
+
+function wrongObjectTapped(event)
+	print("Wrong Object Tapped!")
+end
+
+
+
+-- Temporary, just for getting scene set up. Transitions to intermediate
+local function e (event)
+	composer.gotoScene("intermediate", transition)
+	return true
+>>>>>>> 6.3-SpawningSprites
 end
 
 --roundTimerCountDown(event) counts seconds down for the round time and ends the game at round length
@@ -59,6 +103,8 @@ function scene:create( event )
 	sceneGroup:insert(backRect)
 	backRect:addEventListener("tap", gotoInter)
 	
+	initBoard();
+
 	--set up sprites
 	spriteSheet = graphics.newImageSheet("marioware.png", {
 		frames = {
@@ -182,9 +228,15 @@ function scene:create( event )
 	-- top text displaying stage
 	stageText = display.newText(sceneGroup, "Stage "..stage, display.contentCenterX, 25, native.systemFont, 30)
 	
-	--create item to get display
+	--create item to get
+	--Frames 8 through 18 are valid objects
+	local rand = math.random(8, 18);
+	itemToGet = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {rand}});
+	itemToGet.x = topDisplay.x; itemToGet.y = topDisplay.y;
+	sceneGroup:insert(spawnObject(rand, sceneGroup, 12));
 	
 	--create "Find!" text
+<<<<<<< HEAD
 	display.newText(sceneGroup, "Find!", display.contentCenterX, display.contentHeight * 9 / 30, native.systemFont, 30)
 	
 	--create bottom display of the room
@@ -194,6 +246,13 @@ function scene:create( event )
 	bottomDisplay:scale(1.25, 1.25)
 	--TODO: remove this when the game is winnable
 	bottomDisplay:addEventListener("tap", function() win = true gotoInter() return true end)
+=======
+	local findText = display.newText(sceneGroup, "Find!", topDisplay.x, topDisplay.y+75, native.systemFont, 25);
+	findText:setFillColor(41/255, 228/255, 242/255)
+	
+	--create bottom display
+
+>>>>>>> 6.3-SpawningSprites
 	
 	--create progress bar
 	--TODO: create progress bar
@@ -207,10 +266,84 @@ function scene:create( event )
 	display.setDefault("fillColor", 1, 1, 1)
 end
 
+function spawnObject(objNumber, sceneGroup, maxObjects)
+
+	--First spawn in the correct object
+	local randRow = math.random(1,3);
+	local randCol = math.random(1,4);
+
+	local correctObj = display.newSprite(sceneGroup, spriteSheet, {name="default", frames={objNumber}});
+	correctObj.x = board[randRow][randCol].x; correctObj.y = board[randRow][randCol].y;
+	board[randRow][randCol].isFilled = true;
+
+	correctObj:addEventListener( "tap", correctObjectTapped )
+
+	local objCount = 1;
+
+	--The following algorithm employs busy waiting for whenever i and j are a location that is already filled,
+	--making this less efficient. However, for a max of 12 elements this doesn't pose a serious issue. Additionally,
+	--this alg. ensures there will always be exactly maxObjects spawned. 	--AV
+
+	--Next spawn in a wrong object for each other cell
+	while objCount < maxObjects do 
+		local i = math.random(1,3);	--random row
+		local j = math.random(1,4);	--random column
+		--Frames 8 through 18 are valid
+		local randFrame = math.random(8,18);
+
+		if(board[i][j].isFilled == false) then
+			if(randFrame ~= objNumber) then
+				local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={randFrame}} );
+				redHerring.x = board[i][j].x; redHerring.y = board[i][j].y;
+				redHerring.xScale = math.random(-1, 1);
+				redHerring:addEventListener("tap", wrongObjectTapped );
+				board[i][j].isFilled = true;
+				objCount = objCount + 1;
+			end
+		end
+	end
+
+	return correctObj;
+
+end
+
+--[[]
+	This algorithm is problematic because it only ensures that NO MORE than max objects are spawned.
+	Any amount less than than is left up to the random randIsNil value. However, this solution employs
+	no busy waiting, and is more efficient. But, given the constraints of the project, the above alg
+	provides more control and less randomness, and so this one is deprecated
+
+	--AV
+
+	for i = 1, 3 do
+		for j = 1, 4 do
+
+			if(objCount >= maxObjects) then
+				break;
+			end
+
+			--Frames 8 through 18 are valid
+			local randFrame = math.random(8,18);
+			local randIsNil = math.random(0, 1);
+			if(board[i][j].isFilled == false and randIsNil ~= 1) then
+				if(randFrame ~= objNumber) then
+					local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={randFrame}} );
+					redHerring.x = board[i][j].x; redHerring.y = board[i][j].y;
+					redHerring:addEventListener("tap", wrongObjectTapped );
+					objCount = objCount + 1;
+				end
+			end
+		end
+	end
+--]]
+
+
 function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
+
 	if phase == "will" then
+<<<<<<< HEAD
 		--start the game
 		--update to the right stage
 		stage = event.params.stageNum
@@ -218,6 +351,10 @@ function scene:show( event )
 		win = false--reset the win state
 		roundTimeText.text = roundLength--reset the timer display
 		roundTimer = timer.performWithDelay(1000, roundTimerCountDown, roundLength)--start game timer to loss
+=======
+		
+
+>>>>>>> 6.3-SpawningSprites
 	end
 end
 
