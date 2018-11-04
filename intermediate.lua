@@ -38,7 +38,7 @@ local function switchSceneToGame( event )
 		})
 		return true
 	end
-end	
+end
 
 -- Switched to game view after 2.5 seconds, used multiple times
 local function gotoGame ()
@@ -61,7 +61,7 @@ end
 function scene:create( event )
 	local sceneGroup = self.view
 	local phase = event.phase
-	
+
 	--rectangle to click to go to game quickly
 	local backRect = display.newRect(display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight)
 	backRect.isHitTestable = true
@@ -69,42 +69,32 @@ function scene:create( event )
 	sceneGroup:insert(backRect)
 	backRect:addEventListener("tap", switchSceneToGame)
 
-	titleButton = widget.newButton(
-				{
-				onEvent = titleButtonListener,
-				emboss = false,
-				shape = "circle",
-				radius = 35,
-				cornerRadius = 2,
-				fillColor = {default={0,0,1,1}, over={1, 1, 1, 1}},
-				strokeColor = {default ={1,1,1,1}, over={1,1,1,1}},
-				strokeWidth = 4
-			
-				}
-			)
-	titleButton.x = display.contentCenterX
-	titleButton.y = display.contentCenterY + 100
+	titleButton = widget.newButton({
+		label = "Return to Title Screen",
+		onEvent = titleButtonListener,
+		shape = "roundedRect",
+		width = display.contentWidth * 2 / 3,
+		height = display.contentHeight / 10,
+		x = display.contentCenterX,
+		y = display.contentCenterY + 100
+	})
 	titleButton.isVisible = false;
-
-	titleText = display.newText(sceneGroup, "Return to Title Screen", display.contentCenterX, display.contentCenterY + 50, native.systemFont, 20);
-	titleText.isVisible = false;
-
 	sceneGroup:insert(titleButton)
-	
+
 	-- Shows the number of lives remaining at the top of the screen
 	livesDisplay = display.newText(sceneGroup, lives.." Lives Remain", display.contentCenterX, 20, native.systemFont, 24)
 	-- Tried to find a nice pink color for the lives message
 	livesDisplay:setFillColor(1,0.33,0.5)
-	
+
 	-- Shows the current stage of the player
 	stageDisplay = display.newText(sceneGroup, "Stage "..stage, display.contentCenterX, display.contentCenterY, native.systemFont, 28)
-	
+
 end
 
 function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
-	
+
 	if(phase == "will") then
 		-- If the previous scene was the game and the player succeeded, increase stage. Or if they failed, decrease lives.
 		if event.params ~= nil then
@@ -117,28 +107,25 @@ function scene:show( event )
 				lives = lives - 1
 			end
 		end
-		
+
 		-- If the player still has lives, continue on to next stage. If not, game over. If stage 10 completed, show congrats/play again type deal
 		if(lives > 0 and stage <= 10) then
 			--continue to next round
 			livesDisplay.text = lives.." Lives Remain"
 			stageDisplay.text = "Stage "..stage
 			titleButton.isVisible = false;
-			titleText.isVisible = false;
 			gotoGame()-- Switch to game view after a few seconds
 		elseif(lives <= 0) then
 			--lose game
 			livesDisplay.text = ""
 			stageDisplay.text = "Game Over!"
 			titleButton.isVisible = true;
-			titleText.isVisible = true;
 			audio.play(lossSnd)
 		elseif(stage > 10) then
 			--win game
 			livesDisplay.text = ""
 			stageDisplay.text = "You win!"
 			titleButton.isVisible = true;
-			titleText.isVisible = true;
 			audio.play(winSnd)
 		end
 	end
