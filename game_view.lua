@@ -22,6 +22,7 @@ local roundTimeText--text that shows time left in round in seconds
 local topDisplay;
 local bottomDisplay;
 local objGroup;
+local goose;
 
 -- gotoInter returns to the intermediate screen
 local function gotoInter ()
@@ -249,10 +250,69 @@ function scene:create( event )
 	roundTimeText = display.newText(sceneGroup, roundLength, 0, display.contentHeight, native.systemFont, 20)
 	roundTimeText.anchorX = 0
 	roundTimeText.anchorY = 1
+
+	
+
 	
 	--set default fill color back to white
 	display.setDefault("fillColor", 1, 1, 1)
 end
+
+local function stopGooseHandler(event)
+	timer.pause(timerRef)
+	goose:pause()
+	timer.performWithDelay(3000, function()timer.resume(timerRef); goose:play(); end)
+end
+function spawnGoose()
+
+	local opt =
+	{
+		frames = {
+			{ x = 147, y = 19, width = 41, height = 41}, --frame 1
+			{ x = 191, y = 19, width = 41, height = 41}, --frame 2
+		}
+	}
+	local sheet = graphics.newImageSheet( "marioware.png", opt);
+	
+	
+	
+	local seqData = {
+		{name = "normal", start=0 ,count = 1, time=800},
+		{name = "faster", frames={1,2,3,4, 5}, time = 800},
+	}
+	goose = display.newSprite (sheet, seqData);
+	objGroup:insert(goose)
+	goose:setSequence("normal");
+	goose:play();
+	goose.x = display.contentWidth / 2
+	--goose.x = 0
+	goose.y = display.contentHeight * 3 / 4
+	--goose.y = display.contentHeight / 4
+	goose:scale(2.5,2.5)
+	deltaX = 1
+	goose.dx = 1
+	goose.dy = 1
+	timerRef= timer.performWithDelay( 10, function() 
+		goose.x= goose.x+goose.dx; 
+		goose.y= goose.y+goose.dy; 
+	if((goose.x + deltaX) > (display.contentWidth) or (goose.x + goose.dx) < 0) then
+		goose.dx = -goose.dx
+		goose:scale(-1,1)
+	end
+
+	if((goose.y + goose.dy) > (display.contentHeight)  or (goose.y + goose.dy) < display.contentHeight / 2) then
+		goose.dy = -goose.dy
+	end
+		end,
+			
+			
+			
+			0 )
+
+	goose:addEventListener("tap", stopGooseHandler)
+end
+
+
 
 function spawnObject(objNumber, sceneGroup, maxObjects)
 
@@ -341,6 +401,7 @@ function scene:show( event )
 		win = false--reset the win state
 		roundTimeText.text = roundLength--reset the timer display
 		roundTimer = timer.performWithDelay(1000, roundTimerCountDown, roundLength)--start game timer to loss
+		
 	end
 	if(phase == "did") then
 		--create item to get
@@ -349,6 +410,8 @@ function scene:show( event )
 		itemToGet = display.newSprite( objGroup, spriteSheet, {name="default", frames = {rand}});
 		itemToGet.x = topDisplay.x; itemToGet.y = topDisplay.y;
 		spawnObject(rand, objGroup, 12);
+		spawnGoose()
+		
 	end
 		
 end
