@@ -15,26 +15,30 @@ local scene = composer.newScene()
 -- Keep track of lives and stage here
 local lives = 4
 local stage = 1
+--declares titleButton for future use
 local titleButton;
 
 local gotoGameTimer--the timer for automatically going to the game
-
+--declares sounds for winning and losing
 local winSnd = audio.loadSound("win.wav")
+local lossSnd = audio.loadSound("lose.wav")
 
 -- Listener function for switching to game scene, happens after a couple seconds
 local function switchSceneToGame( event )
-	if gotoGameTimer ~= nil then
-		timer.cancel(gotoGameTimer)
+	if (stage <= 10 and lives > 0) then
+		if gotoGameTimer ~= nil then
+			timer.cancel(gotoGameTimer)
+		end
+		composer.gotoScene("game_view", {
+			effect = "slideLeft",
+			time = 750,
+			params = {
+				stageNum = stage
+			}
+		})
+		return true
 	end
-	composer.gotoScene("game_view", {
-		effect = "slideLeft",
-		time = 750,
-		params = {
-			stageNum = stage
-		}
-	})
-	return true
-end
+end	
 
 -- Switched to game view after 2.5 seconds, used multiple times
 local function gotoGame ()
@@ -128,6 +132,7 @@ function scene:show( event )
 			stageDisplay.text = "Game Over!"
 			titleButton.isVisible = true;
 			titleText.isVisible = true;
+			audio.play(lossSnd)
 		elseif(stage > 10) then
 			--win game
 			livesDisplay.text = ""
