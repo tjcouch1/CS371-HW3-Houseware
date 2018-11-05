@@ -89,7 +89,7 @@ end
 --this is necessary to update the progress bar and time display
 local function roundTimerCountDown(event)
 	roundTimeText.text = roundLength - event.count
-	progressBar:setProgress(((roundLength-event.count) / 8) * 0.99)
+	progressBar:setProgress(((roundLength-event.count) / roundLength))
 	if event.count >= roundLength then
 		--end round on a loss
 		gotoInter()
@@ -234,7 +234,7 @@ function scene:create( event )
 	stageText = display.newText(sceneGroup, "Stage "..stage, display.contentCenterX, 25, native.systemFont, 30)
 
 	--create "Find!" text
-	display.newText(sceneGroup, "Find!", display.contentCenterX, display.contentHeight * 9 / 30, native.systemFont, 30)
+	display.newText(sceneGroup, "Find!", display.contentCenterX, display.contentHeight * 1 / 3, native.systemFont, 24)
 
 	--create bottom display of the room
 	bottomDisplay = display.newSprite(sceneGroup, spriteSheet, {name = "default", frames = {2}})
@@ -242,24 +242,21 @@ function scene:create( event )
 	bottomDisplay.y = display.contentHeight * 3 / 4
 	bottomDisplay:scale(1.25, 1.25)
 
-
-	--create progress bar
-	--TODO: create progress bar
-
 	--text for round time
-	roundTimeText = display.newText(sceneGroup, roundLength, 0, display.contentHeight, native.systemFont, 20)
+	roundTimeText = display.newText(sceneGroup, roundLength, 0, display.contentHeight, native.systemFont, 16)
 	roundTimeText.anchorX = 0
 	roundTimeText.anchorY = 1
 
+	--create progress bar
 	progressBar = widget.newProgressView(
 		{
 			x = display.contentCenterX,
-			y = display.contentCenterY + 250,
+			y = display.contentHeight - 10,
 			width = 300,
 			isAnimated = true
 		}
 	)
-	progressBar:setProgress(0.99)
+	progressBar:setProgress(1)
 	sceneGroup:insert(progressBar)
 
 	--set default fill color back to white
@@ -377,7 +374,7 @@ function scene:show( event )
 		roundTimer = timer.performWithDelay(1000, roundTimerCountDown, roundLength)--start game timer to loss
 		--create objects
 		spawnObjects(objGroup, 12);
-		progressBar:setProgress(0.99)
+		progressBar:setProgress(1)
 	end
 	if(phase == "did") then
 	end
@@ -393,6 +390,9 @@ end
 
 function scene:destroy( event )
 	local phase = event.phase
+	if spriteSheet ~= nil then
+		spriteSheet = nil
+	end
 end
 
 scene:addEventListener( "create", scene )
