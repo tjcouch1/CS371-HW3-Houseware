@@ -8,9 +8,11 @@
 -----------------------------------------------------------------------------------------
 
 local composer = require("composer")
+local widget = require("widget")
 
 local scene = composer.newScene()
 
+local sceneGroup--the scene view to add displayObjects to
 local spriteSheet--the sprite sheet for everything
 local itemToGet--the sprite that shows which item to get at the start of each round
 local stageText--the text at the top that shows which stage you're on
@@ -22,7 +24,15 @@ local roundTimeText--text that shows time left in round in seconds
 local topDisplay;
 local bottomDisplay;
 local objGroup;
+<<<<<<< HEAD
 local goose;
+=======
+local objFrameTable = {--table of frames to use for each object index 1-21
+	8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,--11 normal objects
+	8,    10, 11, 12, 13, 14, 15, 16, 17, 18--10 flipped objects
+}
+local progressBar;--the progressView widget
+>>>>>>> f10eea7345bf27d50fced5c462d9fcd8ca57c2aa
 
 -- gotoInter returns to the intermediate screen
 local function gotoInter ()
@@ -66,29 +76,24 @@ function initBoard()
 	end
 end
 
---On Tap events
+--correctObjectTapped(event) Win round!
 function correctObjectTapped(event)
 	print("Correct object tapped!")
 	win = true;
 	gotoInter();
 end
 
+--wrongObjectTapped(event) Lose round :(
 function wrongObjectTapped(event)
 	print("Wrong Object Tapped!")
-end
-
-
-
--- Temporary, just for getting scene set up. Transitions to intermediate
-local function e (event)
-	composer.gotoScene("intermediate", transition)
-	return true
+	gotoInter()
 end
 
 --roundTimerCountDown(event) counts seconds down for the round time and ends the game at round length
 --this is necessary to update the progress bar and time display
 local function roundTimerCountDown(event)
 	roundTimeText.text = roundLength - event.count
+	progressBar:setProgress(((roundLength-event.count) / roundLength))
 	if event.count >= roundLength then
 		--end round on a loss
 		gotoInter()
@@ -96,20 +101,19 @@ local function roundTimerCountDown(event)
 end
 
 function scene:create( event )
-	local sceneGroup = self.view
+	sceneGroup = self.view
 	local phase = event.phase
-	
+
 	stage = event.params.stageNum
-	
+
 	--set default fill color to black
 	display.setDefault("fillColor", 0, 0, 0)
-	
+
 	--set background to red
 	local backRect = display.newRect(display.contentCenterX, display.contentCenterY, display.contentWidth, display.contentHeight)
 	backRect:setFillColor(1, 0, 0)
 	sceneGroup:insert(backRect)
-	backRect:addEventListener("tap", gotoInter)
-	
+
 	--set up sprites
 	spriteSheet = graphics.newImageSheet("marioware.png", {
 		frames = {
@@ -223,41 +227,53 @@ function scene:create( event )
 			}
 		}
 	})
-	
+
 	--create top display
 	topDisplay = display.newSprite(sceneGroup, spriteSheet, {name = "default", frames = {1}})
 	topDisplay.x = display.contentWidth / 2
 	topDisplay.y = display.contentHeight / 4
 	topDisplay:scale(1.25, 1.25)
-	
+
 	-- top text displaying stage
 	stageText = display.newText(sceneGroup, "Stage "..stage, display.contentCenterX, 25, native.systemFont, 30)
-	
+
 	--create "Find!" text
-	display.newText(sceneGroup, "Find!", display.contentCenterX, display.contentHeight * 9 / 30, native.systemFont, 30)
-	
+	display.newText(sceneGroup, "Find!", display.contentCenterX, display.contentHeight * 1 / 3, native.systemFont, 24)
+
 	--create bottom display of the room
 	bottomDisplay = display.newSprite(sceneGroup, spriteSheet, {name = "default", frames = {2}})
 	bottomDisplay.x = display.contentWidth / 2
 	bottomDisplay.y = display.contentHeight * 3 / 4
 	bottomDisplay:scale(1.25, 1.25)
-	
-	
-	--create progress bar
-	--TODO: create progress bar
-	
+
 	--text for round time
-	roundTimeText = display.newText(sceneGroup, roundLength, 0, display.contentHeight, native.systemFont, 20)
+	roundTimeText = display.newText(sceneGroup, roundLength, 0, display.contentHeight, native.systemFont, 16)
 	roundTimeText.anchorX = 0
 	roundTimeText.anchorY = 1
 
+<<<<<<< HEAD
 	
 
 	
+=======
+	--create progress bar
+	progressBar = widget.newProgressView(
+		{
+			x = display.contentCenterX,
+			y = display.contentHeight - 10,
+			width = 300,
+			isAnimated = true
+		}
+	)
+	progressBar:setProgress(1)
+	sceneGroup:insert(progressBar)
+
+>>>>>>> f10eea7345bf27d50fced5c462d9fcd8ca57c2aa
 	--set default fill color back to white
 	display.setDefault("fillColor", 1, 1, 1)
 end
 
+<<<<<<< HEAD
 local function stopGooseHandler(event)
 	timer.pause(timerRef)
 	goose:pause()
@@ -315,12 +331,33 @@ end
 
 
 function spawnObject(objNumber, sceneGroup, maxObjects)
+=======
+--spawnObjects(objNumber, sceneGroup, maxObjects) create maxObjects number of items with index objNumber in the sceneGroup
+function spawnObjects(sceneGroup, maxObjects)
+
+	--create item to get
+	--1 to 21 are valid objects
+	local objectIndex = math.random(1, 21);
+	print(objFrameTable[objectIndex])
+	itemToGet = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {objFrameTable[objectIndex]}});
+	itemToGet:scale(1.25, 1.25)
+	--flip sprite for mirrored objects
+	if objectIndex > 11 then
+		itemToGet:scale(-1, 1)
+	end
+	itemToGet.x = topDisplay.x; itemToGet.y = topDisplay.y;
+>>>>>>> f10eea7345bf27d50fced5c462d9fcd8ca57c2aa
 
 	--First spawn in the correct object
 	local randRow = math.random(1,3);
 	local randCol = math.random(1,4);
 
-	local correctObj = display.newSprite(sceneGroup, spriteSheet, {name="default", frames={objNumber}});
+	local correctObj = display.newSprite(sceneGroup, spriteSheet, {name="default", frames={objFrameTable[objectIndex]}});
+	correctObj:scale(1.25, 1.25)
+	--flip sprite for mirrored objects
+	if objectIndex > 11 then
+		correctObj:scale(-1, 1)
+	end
 	correctObj.x = board[randRow][randCol].x; correctObj.y = board[randRow][randCol].y;
 	board[randRow][randCol].isFilled = true;
 
@@ -333,17 +370,21 @@ function spawnObject(objNumber, sceneGroup, maxObjects)
 	--this alg. ensures there will always be exactly maxObjects spawned. 	--AV
 
 	--Next spawn in a wrong object for each other cell
-	while objCount < maxObjects do 
+	while objCount < maxObjects do
 		local i = math.random(1,3);	--random row
 		local j = math.random(1,4);	--random column
-		--Frames 8 through 18 are valid
-		local randFrame = math.random(8,18);
+		--1 to 21 are valid objects
+		local randFrame = math.random(1, 21);
 
 		if(board[i][j].isFilled == false) then
 			if(randFrame ~= objNumber) then
-				local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={randFrame}} );
+				local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={objFrameTable[randFrame]}} );
+				redHerring:scale(1.25, 1.25)
+				--flip sprite for mirrored objects
+				if randFrame > 11 then
+					redHerring:scale(-1, 1)
+				end
 				redHerring.x = board[i][j].x; redHerring.y = board[i][j].y;
-				redHerring.xScale = math.random(-1, 1);
 				redHerring:addEventListener("tap", wrongObjectTapped );
 				board[i][j].isFilled = true;
 				objCount = objCount + 1;
@@ -387,13 +428,13 @@ end
 
 
 function scene:show( event )
-	local sceneGroup = self.view
 	local phase = event.phase
 
 	if phase == "will" then
 		--initializations
 		initBoard();
 		objGroup = display.newGroup();
+		sceneGroup:insert(objGroup)
 
 		--update to the right stage
 		stage = event.params.stageNum
@@ -401,6 +442,7 @@ function scene:show( event )
 		win = false--reset the win state
 		roundTimeText.text = roundLength--reset the timer display
 		roundTimer = timer.performWithDelay(1000, roundTimerCountDown, roundLength)--start game timer to loss
+<<<<<<< HEAD
 		
 	end
 	if(phase == "did") then
@@ -412,12 +454,18 @@ function scene:show( event )
 		spawnObject(rand, objGroup, 12);
 		spawnGoose()
 		
+=======
+		--create objects
+		spawnObjects(objGroup, 12);
+		progressBar:setProgress(1)
 	end
-		
+	if(phase == "did") then
+>>>>>>> f10eea7345bf27d50fced5c462d9fcd8ca57c2aa
+	end
+
 end
 
 function scene:hide( event )
-	local sceneGroup = self.view
 	local phase = event.phase
 	if phase == "will" then
 		objGroup:removeSelf( );
@@ -425,8 +473,10 @@ function scene:hide( event )
 end
 
 function scene:destroy( event )
-	local sceneGroup = self.view
 	local phase = event.phase
+	if spriteSheet ~= nil then
+		spriteSheet = nil
+	end
 end
 
 scene:addEventListener( "create", scene )
