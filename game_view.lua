@@ -24,15 +24,12 @@ local roundTimeText--text that shows time left in round in seconds
 local topDisplay;
 local bottomDisplay;
 local objGroup;
-<<<<<<< HEAD
 local goose;
-=======
 local objFrameTable = {--table of frames to use for each object index 1-21
 	8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,--11 normal objects
 	8,    10, 11, 12, 13, 14, 15, 16, 17, 18--10 flipped objects
 }
 local progressBar;--the progressView widget
->>>>>>> f10eea7345bf27d50fced5c462d9fcd8ca57c2aa
 
 -- gotoInter returns to the intermediate screen
 local function gotoInter ()
@@ -251,11 +248,6 @@ function scene:create( event )
 	roundTimeText.anchorX = 0
 	roundTimeText.anchorY = 1
 
-<<<<<<< HEAD
-	
-
-	
-=======
 	--create progress bar
 	progressBar = widget.newProgressView(
 		{
@@ -268,17 +260,16 @@ function scene:create( event )
 	progressBar:setProgress(1)
 	sceneGroup:insert(progressBar)
 
->>>>>>> f10eea7345bf27d50fced5c462d9fcd8ca57c2aa
 	--set default fill color back to white
 	display.setDefault("fillColor", 1, 1, 1)
 end
 
-<<<<<<< HEAD
 local function stopGooseHandler(event)
 	timer.pause(timerRef)
 	goose:pause()
 	timer.performWithDelay(3000, function()timer.resume(timerRef); goose:play(); end)
 end
+--spawn the goose
 function spawnGoose()
 
 	local opt =
@@ -308,30 +299,64 @@ function spawnGoose()
 	deltaX = 1
 	goose.dx = 1
 	goose.dy = 1
+	--[[]
 	timerRef= timer.performWithDelay( 10, function() 
+		if(goose.x ~= nil) then
 		goose.x= goose.x+goose.dx; 
 		goose.y= goose.y+goose.dy; 
 	if((goose.x + deltaX) > (display.contentWidth) or (goose.x + goose.dx) < 0) then
 		goose.dx = -goose.dx
 		goose:scale(-1,1)
 	end
+	
 
 	if((goose.y + goose.dy) > (display.contentHeight)  or (goose.y + goose.dy) < display.contentHeight / 2) then
 		goose.dy = -goose.dy
+	end
 	end
 		end,
 			
 			
 			
 			0 )
-
+	
 	goose:addEventListener("tap", stopGooseHandler)
+	--]]
 end
 
 
+function moveGoose(goose) --move the goose around the box
+	if(goose ~= nil) then
+	timerRef= timer.performWithDelay( 10, function() 
+		if(goose.x ~= nil) then
+		goose.x= goose.x+goose.dx; 
+		goose.y= goose.y+goose.dy; 
+	if((goose.x + deltaX) > (display.contentWidth) or (goose.x + goose.dx) < 0) then
+		goose.dx = -goose.dx
+		goose:scale(-1,1)
+	end
+	
 
-function spawnObject(objNumber, sceneGroup, maxObjects)
-=======
+	if((goose.y + goose.dy) > (display.contentHeight)  or (goose.y + goose.dy) < display.contentHeight / 2) then
+		goose.dy = -goose.dy
+	end
+	end
+		end,
+			
+			
+			
+			0 )
+	goose:addEventListener("tap", stopGooseHandler)
+	end
+
+
+
+
+end
+
+--moveGoose(goose)
+
+--function spawnObject(objNumber, sceneGroup, maxObjects)
 --spawnObjects(objNumber, sceneGroup, maxObjects) create maxObjects number of items with index objNumber in the sceneGroup
 function spawnObjects(sceneGroup, maxObjects)
 
@@ -346,7 +371,6 @@ function spawnObjects(sceneGroup, maxObjects)
 		itemToGet:scale(-1, 1)
 	end
 	itemToGet.x = topDisplay.x; itemToGet.y = topDisplay.y;
->>>>>>> f10eea7345bf27d50fced5c462d9fcd8ca57c2aa
 
 	--First spawn in the correct object
 	local randRow = math.random(1,3);
@@ -442,25 +466,14 @@ function scene:show( event )
 		win = false--reset the win state
 		roundTimeText.text = roundLength--reset the timer display
 		roundTimer = timer.performWithDelay(1000, roundTimerCountDown, roundLength)--start game timer to loss
-<<<<<<< HEAD
-		
-	end
-	if(phase == "did") then
-		--create item to get
-		--Frames 8 through 18 are valid objects
-		local rand = math.random(8, 18);
-		itemToGet = display.newSprite( objGroup, spriteSheet, {name="default", frames = {rand}});
-		itemToGet.x = topDisplay.x; itemToGet.y = topDisplay.y;
-		spawnObject(rand, objGroup, 12);
-		spawnGoose()
-		
-=======
 		--create objects
 		spawnObjects(objGroup, 12);
 		progressBar:setProgress(1)
+		--Spawn and move goose
+		spawnGoose();
+		moveGoose(goose);
 	end
 	if(phase == "did") then
->>>>>>> f10eea7345bf27d50fced5c462d9fcd8ca57c2aa
 	end
 
 end
