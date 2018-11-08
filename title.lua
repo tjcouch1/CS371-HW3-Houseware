@@ -15,17 +15,17 @@ local scene = composer.newScene()
 function scene:create( event )
 	local sceneGroup = self.view
 	local phase = event.phase
-	
+
 	-- Title and names
 	local title = display.newText(sceneGroup, "Houseware", display.contentCenterX, display.contentCenterY/2, native.systemFont, 36)
 	local names = display.newText(sceneGroup, "Spencer Bowen\nTJ Couch\nTimothy Morrison\nJonah Minihan\nAustin Vickers", display.contentCenterX, display.contentCenterY, native.systemFont, 12)
-	
+
 	-- Listener for when "Start" button is released. Moves to intermediate scene.
 	local function release ( event )
-		composer.gotoScene("intermediate")
+		composer.gotoScene("intermediate", {effect = "slideLeft", time = 750})
 		return true
 	end
-	
+
 	-- "Start" button
 	local start = widget.newButton({
 		x = display.contentCenterX,
@@ -42,6 +42,9 @@ end
 function scene:show( event )
 	local sceneGroup = self.view
 	local phase = event.phase
+	if event.phase == "did" then
+		composer.removeScene("intermediate")
+	end
 end
 
 function scene:hide( event )
