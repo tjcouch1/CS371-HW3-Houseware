@@ -308,7 +308,7 @@ function spawnObjects(sceneGroup, maxObjects)
 
 		local randFrame = math.random(1, 21);
 
-		if (stage > 6) then--Extra difficulty
+		if (stage > 6) then--Extra difficulty --Tim
 
 			if (math.random (1,100) < 21) then--20% chance to spawn a nearby one
 
@@ -336,11 +336,8 @@ function spawnObjects(sceneGroup, maxObjects)
 		end
 
 
-
-		
-
 		if(board[i][j].isFilled == false) then
-			if(randFrame ~= objNumber) then
+			if(randFrame ~= objectIndex) then
 				local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={objFrameTable[randFrame]}} );
 				redHerring:scale(1.25, 1.25)
 				--flip sprite for mirrored objects
@@ -410,7 +407,6 @@ function scene:show( event )
 		roundTimer = timer.performWithDelay(1000, roundTimerCountDown, roundLength)--start game timer to loss
 		--create objects
 		if (stage < 4) then
-
 			spawnObjects(objGroup, math.random (3,5));
 		elseif (stage < 7) then
 			spawnObjects(objGroup, math.random (6,8));
