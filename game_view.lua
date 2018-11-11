@@ -27,6 +27,7 @@ local objGroup;
 local goose;
 local screenOpen;
 local clickable;
+local isPaused;
 local winMusic = audio.loadStream( "win.wav" );
 local loseMusic = audio.loadStream( "lose.wav" );
 local objFrameTable = {--table of frames to use for each object index 1-21
@@ -299,18 +300,24 @@ function scene:create( event )
 end
 
 local function stopGooseHandler(event)
+	if(isPaused == 0)then 
+		isPaused = 1;
 	timer.pause(timerRef)
 	goose:pause()
 	if(screenOpen == 1) then
 		timer.performWithDelay(3000, function()timer.resume(timerRef); 
 			if(screenOpen == 1)then 
 				goose:play(); 
+				isPaused = 0;
 			end
 		end)
 	end
+	end
+	return true;
 end
 --spawn the goose
 function spawnGoose()
+	isPaused = 0;
 	screenOpen = 1;
 	local opt =
 	{
@@ -559,6 +566,7 @@ end
 function scene:hide( event )
 	local phase = event.phase
 	if phase == "will" then
+		screenOpen = 0;
 		objGroup:removeSelf( );
 	end
 end
