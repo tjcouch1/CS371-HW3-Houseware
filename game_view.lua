@@ -25,6 +25,10 @@ local topDisplay;
 local bottomDisplay;
 local objGroup;
 local goose;
+local screenOpen;
+local clickable;
+local winMusic = audio.loadStream( "win.wav" );
+local loseMusic = audio.loadStream( "lose.wav" );
 local objFrameTable = {--table of frames to use for each object index 1-21
 	8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,--11 normal objects
 	8,    10, 11, 12, 13, 14, 15, 16, 17, 18--10 flipped objects
@@ -36,13 +40,22 @@ local function gotoInter ()
 	if roundTimer ~= nil then
 		timer.cancel(roundTimer)
 	end
-	composer.gotoScene("intermediate", {
-		effect = "slideRight",
-		time = 750,
-		params = {
-			success = win
-		}
-	})
+	timer.performWithDelay(1000, function()--timer.resume(timerRef); 
+		composer.gotoScene("intermediate", {
+			effect = "slideRight",
+			time = 750,
+			params = {
+				success = win
+			}
+		})
+	end)
+--	composer.gotoScene("intermediate", {
+--		effect = "slideRight",
+--		time = 750,
+--		params = {
+--			success = win
+--		}
+--	})
 end
 
 --a 3x4 grid to place items in so they won't overlap
@@ -75,15 +88,35 @@ end
 
 --correctObjectTapped(event) Win round!
 function correctObjectTapped(event)
+	if(clickable == 1)then 
 	print("Correct object tapped!")
 	win = true;
+	local winChannel = audio.play( winMusic )
+	correctCircle = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {6}});
+	correctCircle:scale(1.25, 1.25)
+	correctCircle.x = event.target.x;
+	correctCircle.y = event.target.y;
+	objGroup:insert(correctCircle);
+	screenOpen = 0;
+	clickable = 0;
 	gotoInter();
+	end
 end
 
 --wrongObjectTapped(event) Lose round :(
 function wrongObjectTapped(event)
+	if(clickable == 1)then
 	print("Wrong Object Tapped!")
+	local loseChannel = audio.play( loseMusic )
+	incorrectCross = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {7}});
+	incorrectCross:scale(1.25, 1.25)
+	incorrectCross.x = event.target.x;
+	incorrectCross.y = event.target.y;
+	objGroup:insert(incorrectCross);
+	screenOpen = 0;
+	clickable = 0;
 	gotoInter()
+	end 
 end
 
 --roundTimerCountDown(event) counts seconds down for the round time and ends the game at round length
@@ -100,7 +133,7 @@ end
 function scene:create( event )
 	sceneGroup = self.view
 	local phase = event.phase
-
+	
 	stage = event.params.stageNum
 
 	--set default fill color to black
@@ -267,11 +300,17 @@ end
 local function stopGooseHandler(event)
 	timer.pause(timerRef)
 	goose:pause()
-	timer.performWithDelay(3000, function()timer.resume(timerRef); goose:play(); end)
+	if(screenOpen == 1) then
+		timer.performWithDelay(3000, function()timer.resume(timerRef); 
+			if(screenOpen == 1)then 
+				goose:play(); 
+			end
+		end)
+	end
 end
 --spawn the goose
 function spawnGoose()
-
+	screenOpen = 1;
 	local opt =
 	{
 		frames = {
@@ -284,8 +323,8 @@ function spawnGoose()
 	
 	
 	local seqData = {
-		{name = "normal", start=0 ,count = 1, time=800},
-		{name = "faster", frames={1,2,3,4, 5}, time = 800},
+		{name = "normal", start=0 ,count = 1, frames={1,2}, time=800},
+		{name = "faster", start=0, count=1, frames={1,2}, time = 800},
 	}
 	goose = display.newSprite (sheet, seqData);
 	objGroup:insert(goose)
@@ -359,7 +398,7 @@ end
 --function spawnObject(objNumber, sceneGroup, maxObjects)
 --spawnObjects(objNumber, sceneGroup, maxObjects) create maxObjects number of items with index objNumber in the sceneGroup
 function spawnObjects(sceneGroup, maxObjects)
-
+	clickable = 1;
 	--create item to get
 	--1 to 21 are valid objects
 	local objectIndex = math.random(1, 21);
