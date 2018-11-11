@@ -34,6 +34,7 @@ local objFrameTable = {--table of frames to use for each object index 1-21
 	8,    10, 11, 12, 13, 14, 15, 16, 17, 18--10 flipped objects
 }
 local progressBar;--the progressView widget
+--local stageDecoy = 1
 
 -- gotoInter returns to the intermediate screen
 local function gotoInter ()
@@ -62,7 +63,7 @@ end
 local board = {};
 
 function initBoard()
-	local cellWidth = display.contentWidth/4;
+	local cellWidth = display.contentWidth/5;
 	local cellHeight = (display.contentHeight/2)/3;
 
 	local initX = 0;
@@ -74,7 +75,7 @@ function initBoard()
   		board[i] = {};     -- create a new row
   		initX = 0;
   		initY = initY + cellHeight;
-    	for j=1, 4 do 	   -- create a new column
+    	for j=1, 5 do 	   -- create a new column
         	board[i][j] = {
         		x = initX + cellWidth/2;
         		y = initY + cellHeight/2;
@@ -413,7 +414,7 @@ function spawnObjects(sceneGroup, maxObjects)
 
 	--First spawn in the correct object
 	local randRow = math.random(1,3);
-	local randCol = math.random(1,4);
+	local randCol = math.random(1,5);
 
 	local correctObj = display.newSprite(sceneGroup, spriteSheet, {name="default", frames={objFrameTable[objectIndex]}});
 	correctObj:scale(1.25, 1.25)
@@ -435,12 +436,41 @@ function spawnObjects(sceneGroup, maxObjects)
 	--Next spawn in a wrong object for each other cell
 	while objCount < maxObjects do
 		local i = math.random(1,3);	--random row
-		local j = math.random(1,4);	--random column
+		local j = math.random(1,5);	--random column
 		--1 to 21 are valid objects
+
 		local randFrame = math.random(1, 21);
 
+		if (stage > 6) then--Extra difficulty --Tim
+
+			if (math.random (1,100) < 21) then--20% chance to spawn a nearby one
+
+				if (objectIndex < 21) then
+					if (math.random(1,100) < 51) then
+						randFrame = objectIndex - 1;
+					else
+						randFrame = objectIndex + 1;
+					end
+				else
+
+					randFrame = math.random(1,21);
+				end
+				--print("Neighbor Spawned!")
+			elseif (math.random (1,100) < 31) then--If that fails, a 30% chance to spawn a mirrored one
+				if (objectIndex > 11) then
+					randFrame = objectIndex - 11;
+				else
+					randFrame = objectIndex + 11;
+				end
+				--print("Mirror Spawned!")
+			end
+		else
+			--local randFrame = math.random(1, 21);
+		end
+
+
 		if(board[i][j].isFilled == false) then
-			if(randFrame ~= objNumber) then
+			if(randFrame ~= objectIndex) then
 				local redHerring = display.newSprite(sceneGroup, spriteSheet, {name="default",frames={objFrameTable[randFrame]}} );
 				redHerring:scale(1.25, 1.25)
 				--flip sprite for mirrored objects
@@ -501,12 +531,21 @@ function scene:show( event )
 
 		--update to the right stage
 		stage = event.params.stageNum
+
+		--stageDecoy = stage
+
 		stageText.text = "Stage "..stage
 		win = false--reset the win state
 		roundTimeText.text = roundLength--reset the timer display
 		roundTimer = timer.performWithDelay(1000, roundTimerCountDown, roundLength)--start game timer to loss
 		--create objects
-		spawnObjects(objGroup, 12);
+		if (stage < 4) then
+			spawnObjects(objGroup, math.random (3,5));
+		elseif (stage < 7) then
+			spawnObjects(objGroup, math.random (6,8));
+		else
+			spawnObjects(objGroup, math.random (9,15));
+		end
 		progressBar:setProgress(1)
 		--Spawn and move goose
 		spawnGoose();
