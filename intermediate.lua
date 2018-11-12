@@ -52,6 +52,7 @@ function scene:create( event )
 	backRect:setFillColor(1, 1, 1, 0)
 	sceneGroup:insert(backRect)
 
+	--title button to continue to next stage and to send back to title after the game is over
 	titleButton = widget.newButton({
 		label = "Continue to Next Stage",
 		onRelease = function() if stage <= 10 and lives > 0 then switchSceneToGame() else titleButtonListener() end end,
@@ -80,13 +81,15 @@ function scene:show( event )
 	if(phase == "will") then
 		-- If the previous scene was the game and the player succeeded, increase stage. Or if they failed, decrease lives.
 		if event.params ~= nil then
-			--always increment stage
-			stage = stage + 1
 			if event.params.success then
 				--win round
+			stage = stage + 1
 			else
 				--lose round
 				lives = lives - 1
+				if stage < 10 then
+					stage = stage + 1
+				end
 			end
 		end
 

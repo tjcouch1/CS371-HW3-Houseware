@@ -25,9 +25,13 @@ local topDisplay;
 local bottomDisplay;
 local objGroup;
 local goose;
+local goose2;
+local timerRef;
+local timerRef2;
 local screenOpen;
 local clickable;
 local isPaused;
+local isPaused2;
 local winMusic = audio.loadStream( "win.wav" );
 local loseMusic = audio.loadStream( "lose.wav" );
 local objFrameTable = {--table of frames to use for each object index 1-21
@@ -91,33 +95,31 @@ end
 --correctObjectTapped(event) Win round!
 function correctObjectTapped(event)
 	if(clickable == 1)then 
-	print("Correct object tapped!")
-	win = true;
-	local winChannel = audio.play( winMusic )
-	correctCircle = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {6}});
-	correctCircle:scale(1.25, 1.25)
-	correctCircle.x = event.target.x;
-	correctCircle.y = event.target.y;
-	objGroup:insert(correctCircle);
-	screenOpen = 0;
-	clickable = 0;
-	gotoInter();
+		win = true;
+		local winChannel = audio.play( winMusic )
+		correctCircle = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {6}});
+		correctCircle:scale(1.25, 1.25)
+		correctCircle.x = event.target.x;
+		correctCircle.y = event.target.y;
+		objGroup:insert(correctCircle);
+		screenOpen = 0;
+		clickable = 0;
+		gotoInter();
 	end
 end
 
 --wrongObjectTapped(event) Lose round :(
 function wrongObjectTapped(event)
 	if(clickable == 1)then
-	print("Wrong Object Tapped!")
-	local loseChannel = audio.play( loseMusic )
-	incorrectCross = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {7}});
-	incorrectCross:scale(1.25, 1.25)
-	incorrectCross.x = event.target.x;
-	incorrectCross.y = event.target.y;
-	objGroup:insert(incorrectCross);
-	screenOpen = 0;
-	clickable = 0;
-	gotoInter()
+		local loseChannel = audio.play( loseMusic )
+		incorrectCross = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {7}});
+		incorrectCross:scale(1.25, 1.25)
+		incorrectCross.x = event.target.x;
+		incorrectCross.y = event.target.y;
+		objGroup:insert(incorrectCross);
+		screenOpen = 0;
+		clickable = 0;
+		gotoInter()
 	end 
 end
 
@@ -125,9 +127,10 @@ end
 --this is necessary to update the progress bar and time display
 local function roundTimerCountDown(event)
 	roundTimeText.text = roundLength - event.count
-	progressBar:setProgress(((roundLength-event.count) / roundLength))
+	progressBar:setProgress((roundLength-event.count) / roundLength)
 	if event.count >= roundLength then
 		--end round on a loss
+		local loseChannel = audio.play( loseMusic )
 		gotoInter()
 	end
 end
@@ -299,6 +302,7 @@ function scene:create( event )
 	display.setDefault("fillColor", 1, 1, 1)
 end
 
+--stops the goose for a short period of time
 local function stopGooseHandler(event)
 	if(isPaused == 0)then 
 		isPaused = 1;
@@ -315,9 +319,29 @@ local function stopGooseHandler(event)
 	end
 	return true;
 end
+
+--stops the goose for a short period of time
+local function stopGoose2Handler(event)
+	if(isPaused2 == 0)then 
+		isPaused2 = 1;
+	timer.pause(timerRef2)
+	goose2:pause()
+	if(screenOpen == 1) then
+		timer.performWithDelay(3000, function()timer.resume(timerRef2); 
+			if(screenOpen == 1)then 
+				goose2:play(); 
+				isPaused2 = 0;
+			end
+		end)
+	end
+	end
+	return true;
+end
+
 --spawn the goose
 function spawnGoose()
 	isPaused = 0;
+	isPaused2 = 0;
 	screenOpen = 1;
 	local opt =
 	{
@@ -334,7 +358,7 @@ function spawnGoose()
 		{name = "normal", start=0 ,count = 1, frames={1,2}, time=800},
 		{name = "faster", start=0, count=1, frames={1,2}, time = 800},
 	}
-	goose = display.newSprite (sheet, seqData);
+	local goose = display.newSprite (sheet, seqData);
 	objGroup:insert(goose)
 	goose:setSequence("normal");
 	goose:play();
@@ -344,8 +368,19 @@ function spawnGoose()
 	--goose.y = display.contentHeight / 4
 	goose:scale(2.5,2.5)
 	deltaX = 1
-	goose.dx = 1
-	goose.dy = 1
+
+	--set goose velocity
+	goose.dx = math.random() / 2 + .5
+	if (math.random() < .5) then--chance to flip the bird
+		goose.dx = goose.dx * -1
+		goose:scale(-1, 1)
+	end
+	goose.dy = math.random() / 2 + .5
+	if (math.random() < .5) then--chance to flip the bird
+		goose.dy = goose.dy * -1
+	end
+
+	return goose
 	--[[]
 	timerRef= timer.performWithDelay( 10, function() 
 		if(goose.x ~= nil) then
@@ -372,28 +407,45 @@ function spawnGoose()
 end
 
 
-function moveGoose(goose) --move the goose around the box
+--moveGoose(goose) move the goose around the box
+function moveGoose(goose)
 	if(goose ~= nil) then
-	timerRef= timer.performWithDelay( 10, function() 
-		if(goose.x ~= nil) then
-		goose.x= goose.x+goose.dx; 
-		goose.y= goose.y+goose.dy; 
-	if((goose.x + deltaX) > (display.contentWidth) or (goose.x + goose.dx) < 0) then
-		goose.dx = -goose.dx
-		goose:scale(-1,1)
-	end
-	
+		--set up tap listener to stop the goose
+		if goose.num == 1 then
+			timerRef = timer.performWithDelay( 10, function() --move the goose around the screen
+				if(goose.x ~= nil) then
+					goose.x= goose.x+goose.dx; 
+					goose.y= goose.y+goose.dy; 
+					if((goose.x + deltaX) > (display.contentWidth) or (goose.x + goose.dx) < 0) then
+						goose.dx = -goose.dx
+						goose:scale(-1,1)
+					end
+				
 
-	if((goose.y + goose.dy) > (display.contentHeight)  or (goose.y + goose.dy) < display.contentHeight / 2) then
-		goose.dy = -goose.dy
-	end
-	end
-		end,
-			
-			
-			
-			0 )
-	goose:addEventListener("tap", stopGooseHandler)
+					if((goose.y + goose.dy) > (display.contentHeight)  or (goose.y + goose.dy) < display.contentHeight / 2) then
+						goose.dy = -goose.dy
+					end
+				end
+			end, 0 )
+			goose:addEventListener("tap", stopGooseHandler)
+		elseif goose.num == 2 then
+			timerRef2 = timer.performWithDelay( 10, function() --move the goose around the screen
+				if(goose.x ~= nil) then
+					goose.x= goose.x+goose.dx; 
+					goose.y= goose.y+goose.dy; 
+					if((goose.x + deltaX) > (display.contentWidth) or (goose.x + goose.dx) < 0) then
+						goose.dx = -goose.dx
+						goose:scale(-1,1)
+					end
+				
+
+					if((goose.y + goose.dy) > (display.contentHeight)  or (goose.y + goose.dy) < display.contentHeight / 2) then
+						goose.dy = -goose.dy
+					end
+				end
+			end, 0 )
+			goose:addEventListener("tap", stopGoose2Handler)
+		end
 	end
 
 
@@ -401,16 +453,13 @@ function moveGoose(goose) --move the goose around the box
 
 end
 
---moveGoose(goose)
 
---function spawnObject(objNumber, sceneGroup, maxObjects)
---spawnObjects(objNumber, sceneGroup, maxObjects) create maxObjects number of items with index objNumber in the sceneGroup
+--spawnObjects(sceneGroup, maxObjects) create maxObjects number of items in the sceneGroup
 function spawnObjects(sceneGroup, maxObjects)
 	clickable = 1;
 	--create item to get
 	--1 to 21 are valid objects
 	local objectIndex = math.random(1, 21);
-	print(objFrameTable[objectIndex])
 	itemToGet = display.newSprite( sceneGroup, spriteSheet, {name="default", frames = {objFrameTable[objectIndex]}});
 	itemToGet:scale(1.25, 1.25)
 	--flip sprite for mirrored objects
@@ -454,7 +503,9 @@ function spawnObjects(sceneGroup, maxObjects)
 
 				if (objectIndex < 21) then
 					if (math.random(1,100) < 51) then
-						randFrame = objectIndex - 1;
+						if objectIndex > 1 then
+							randFrame = objectIndex - 1;
+						end
 					else
 						randFrame = objectIndex + 1;
 					end
@@ -463,10 +514,10 @@ function spawnObjects(sceneGroup, maxObjects)
 					randFrame = math.random(1,21);
 				end
 				--print("Neighbor Spawned!")
-			elseif (math.random (1,100) < 31) then--If that fails, a 30% chance to spawn a mirrored one
+			elseif (math.random (1,100) < 41) then--If that fails, a 41% chance to spawn a mirrored one
 				if (objectIndex > 11) then
 					randFrame = objectIndex - 11;
-				else
+				elseif objectIndex < 11 then
 					randFrame = objectIndex + 11;
 				end
 				--print("Mirror Spawned!")
@@ -555,10 +606,20 @@ function scene:show( event )
 		end
 		progressBar:setProgress(1)
 		--Spawn and move goose
-		spawnGoose();
-		moveGoose(goose);
+		if stage >= 4 then
+			goose = spawnGoose();
+			goose.num = 1;
+			moveGoose(goose);
+			
+			if stage >= 7 then
+				goose2 = spawnGoose();
+				goose2.num = 2;
+				moveGoose(goose2);
+			end
+		end
 	end
 	if(phase == "did") then
+		progressBar:setProgress(1)
 	end
 
 end
